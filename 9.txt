@@ -7,6 +7,7 @@ local function ringControl2()
     local partCon = nil
     local removeCon = nil
     local screenGui = nil
+    local mainFrame = nil
 
     local function retainPart(part)
         if part:IsA("BasePart") and not part.Anchored and part:IsDescendantOf(workspace) then
@@ -40,52 +41,51 @@ local function ringControl2()
     local function createGUI()
         if screenGui then return end
         screenGui = Instance.new("ScreenGui")
-        screenGui.Name = "黑洞2控制面板"
-        screenGui.Parent = plr:WaitForChild("PlayerGui")
+        screenGui.Name = "SuperRingPartsGUI2"
         screenGui.ResetOnSpawn = false
+        screenGui.Parent = plr:WaitForChild("PlayerGui")
 
-        local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(0, 280, 0, 360)
-        frame.Position = UDim2.new(0.5, -140, 0.5, -180)
-        frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-        frame.BorderSizePixel = 0
-        frame.Parent = screenGui
-        frame.Active = true
-        frame.Draggable = true
+        mainFrame = Instance.new("Frame")
+        mainFrame.Size = UDim2.new(0, 300, 0, 500)
+        mainFrame.Position = UDim2.new(0.5, -150, 0.5, -250)
+        mainFrame.BorderSizePixel = 0
+        mainFrame.Parent = screenGui
+        mainFrame.Active = true
+        mainFrame.Draggable = true
 
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 16)
-        corner.Parent = frame
+        local uiCorner = Instance.new("UICorner")
+        uiCorner.CornerRadius = UDim.new(0, 20)
+        uiCorner.Parent = mainFrame
 
         local title = Instance.new("TextLabel")
         title.Size = UDim2.new(1, 0, 0, 40)
         title.Text = "🌀 黑洞2 控制面板 🌀"
-        title.TextColor3 = Color3.fromRGB(255, 255, 255)
-        title.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
-        title.Font = Enum.Font.GothamBold
-        title.TextSize = 18
-        title.Parent = frame
+        title.TextColor3 = Color3.fromRGB(0, 0, 0)
+        title.BackgroundColor3 = Color3.fromRGB(0, 204, 204)
+        title.Font = Enum.Font.Fondamento
+        title.TextSize = 22
+        title.Parent = mainFrame
         local titleCorner = Instance.new("UICorner")
-        titleCorner.CornerRadius = UDim.new(0, 16)
+        titleCorner.CornerRadius = UDim.new(0, 20)
         titleCorner.Parent = title
 
         local closeBtn = Instance.new("TextButton")
         closeBtn.Size = UDim2.new(0, 30, 0, 30)
-        closeBtn.Position = UDim2.new(1, -36, 0, 5)
+        closeBtn.Position = UDim2.new(1, -35, 0, 5)
         closeBtn.Text = "✕"
         closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        closeBtn.Font = Enum.Font.GothamBold
-        closeBtn.TextSize = 18
-        closeBtn.Parent = frame
-        local cc = Instance.new("UICorner")
-        cc.CornerRadius = UDim.new(0, 8)
-        cc.Parent = closeBtn
+        closeBtn.Font = Enum.Font.Fondamento
+        closeBtn.TextSize = 15
+        closeBtn.Parent = mainFrame
+        local closeCorner = Instance.new("UICorner")
+        closeCorner.CornerRadius = UDim.new(0, 15)
+        closeCorner.Parent = closeBtn
         closeBtn.MouseButton1Click:Connect(function()
             if screenGui then screenGui:Destroy() screenGui = nil end
         end)
 
-        local function createControl(labelText, configKey, posY, step, minVal, maxVal)
+        local function createControl(labelText, configKey, posY, color, step, minVal, maxVal)
             step = step or 10
             minVal = minVal or 0
             maxVal = maxVal or 10000
@@ -93,21 +93,21 @@ local function ringControl2()
             local bg = Instance.new("Frame")
             bg.Size = UDim2.new(0.9, 0, 0, 42)
             bg.Position = UDim2.new(0.05, 0, posY, 0)
-            bg.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+            bg.BackgroundColor3 = color
             bg.BorderSizePixel = 0
-            bg.Parent = frame
+            bg.Parent = mainFrame
             local bgCorner = Instance.new("UICorner")
             bgCorner.CornerRadius = UDim.new(0, 8)
             bgCorner.Parent = bg
 
             local label = Instance.new("TextLabel")
-            label.Size = UDim2.new(0.4, 0, 1, 0)
+            label.Size = UDim2.new(0.45, 0, 1, 0)
             label.Position = UDim2.new(0.02, 0, 0, 0)
             label.Text = labelText
-            label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            label.TextColor3 = Color3.fromRGB(0, 0, 0)
             label.BackgroundTransparency = 1
-            label.Font = Enum.Font.GothamMedium
-            label.TextSize = 14
+            label.Font = Enum.Font.Fondamento
+            label.TextSize = 18
             label.TextXAlignment = Enum.TextXAlignment.Left
             label.Parent = bg
 
@@ -115,40 +115,57 @@ local function ringControl2()
             display.Size = UDim2.new(0.2, 0, 1, 0)
             display.Position = UDim2.new(0.42, 0, 0, 0)
             display.Text = tostring(config[configKey])
-            display.TextColor3 = Color3.fromRGB(255, 255, 255)
+            display.TextColor3 = Color3.fromRGB(0, 0, 0)
             display.BackgroundTransparency = 1
-            display.Font = Enum.Font.GothamBold
-            display.TextSize = 15
+            display.Font = Enum.Font.Fondamento
+            display.TextSize = 18
             display.Parent = bg
 
             local minusBtn = Instance.new("TextButton")
             minusBtn.Size = UDim2.new(0, 30, 0, 30)
-            minusBtn.Position = UDim2.new(0.68, 0, 0.5, -15)
+            minusBtn.Position = UDim2.new(0.7, 0, 0.5, -15)
             minusBtn.Text = "-"
-            minusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            minusBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-            minusBtn.Font = Enum.Font.GothamBold
-            minusBtn.TextSize = 18
+            minusBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+            minusBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+            minusBtn.Font = Enum.Font.Fondamento
+            minusBtn.TextSize = 20
             minusBtn.Parent = bg
             local mc = Instance.new("UICorner")
-            mc.CornerRadius = UDim.new(0, 6)
+            mc.CornerRadius = UDim.new(0, 8)
             mc.Parent = minusBtn
 
             local plusBtn = Instance.new("TextButton")
             plusBtn.Size = UDim2.new(0, 30, 0, 30)
             plusBtn.Position = UDim2.new(0.82, 0, 0.5, -15)
             plusBtn.Text = "+"
-            plusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            plusBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-            plusBtn.Font = Enum.Font.GothamBold
-            plusBtn.TextSize = 18
+            plusBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+            plusBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+            plusBtn.Font = Enum.Font.Fondamento
+            plusBtn.TextSize = 20
             plusBtn.Parent = bg
             local pc = Instance.new("UICorner")
-            pc.CornerRadius = UDim.new(0, 6)
+            pc.CornerRadius = UDim.new(0, 8)
             pc.Parent = plusBtn
+
+            local inputBox = Instance.new("TextBox")
+            inputBox.Size = UDim2.new(0.2, 0, 0, 30)
+            inputBox.Position = UDim2.new(0.42, 0, 0.5, -15)
+            inputBox.Text = tostring(config[configKey])
+            inputBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+            inputBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            inputBox.Font = Enum.Font.Fondamento
+            inputBox.TextSize = 16
+            inputBox.TextXAlignment = Enum.TextXAlignment.Center
+            inputBox.PlaceholderText = "数值"
+            inputBox.ClearTextOnFocus = false
+            inputBox.Parent = bg
+            local ibCorner = Instance.new("UICorner")
+            ibCorner.CornerRadius = UDim.new(0, 6)
+            ibCorner.Parent = inputBox
 
             local function updateDisplay()
                 display.Text = tostring(config[configKey])
+                inputBox.Text = tostring(config[configKey])
                 local method = "set" .. configKey:gsub("^%l", string.upper)
                 if enabled and _G.RingControl2 and _G.RingControl2[method] then
                     _G.RingControl2[method](config[configKey])
@@ -166,12 +183,39 @@ local function ringControl2()
                 config[configKey] = newVal
                 updateDisplay()
             end)
+
+            inputBox.FocusLost:Connect(function(enterPressed)
+                if enterPressed then
+                    local newVal = tonumber(inputBox.Text)
+                    if newVal then
+                        newVal = math.clamp(newVal, minVal, maxVal)
+                        config[configKey] = newVal
+                        updateDisplay()
+                    else
+                        inputBox.Text = tostring(config[configKey])
+                    end
+                end
+            end)
         end
 
-        createControl("半径", "radius", 0.05, 10, 0, 10000)
-        createControl("高度", "height", 0.18, 10, 0, 10000)
-        createControl("转速", "rotationSpeed", 0.31, 1, 0, 10000)
-        createControl("吸力", "attractionStrength", 0.44, 100, 0, 10000)
+        createControl("半径", "radius", 0.08, Color3.fromRGB(153, 153, 0), 10, 0, 10000)
+        createControl("高度", "height", 0.22, Color3.fromRGB(153, 0, 153), 10, 0, 10000)
+        createControl("转速", "rotationSpeed", 0.36, Color3.fromRGB(0, 153, 153), 1, 0, 10000)
+        createControl("吸力", "attractionStrength", 0.50, Color3.fromRGB(153, 0, 0), 100, 0, 10000)
+
+        local hue = 0
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if not mainFrame or not mainFrame.Parent then return end
+            hue = (hue + 0.01) % 1
+            mainFrame.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+        end)
+
+        local textHue = 0
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if not title or not title.Parent then return end
+            textHue = (textHue + 0.01) % 1
+            title.TextColor3 = Color3.fromHSV(textHue, 1, 1)
+        end)
     end
 
     local function start()
@@ -205,6 +249,7 @@ local function ringControl2()
         enabled = false
         if con then con:Disconnect() con = nil end
         if screenGui then screenGui:Destroy() screenGui = nil end
+        mainFrame = nil
     end
 
     return {

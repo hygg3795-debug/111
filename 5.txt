@@ -1,1 +1,224 @@
-local function ringControl()local plr=game.Players.LocalPlayer local enabled=false local parts={} local config={radius=50,height=100,rotationSpeed=10,attractionStrength=1000}local con=nil local partCon=nil local removeCon=nil local function retainPart(part)if part:IsA("BasePart")and not part.Anchored and part:IsDescendantOf(workspace)then if part.Parent==plr.Character or part:IsDescendantOf(plr.Character)then return false end pcall(function()part.CustomPhysicalProperties=PhysicalProperties.new(0,0,0,0,0)part.CanCollide=false end)return true end return false end local function addPart(part)if retainPart(part)and not table.find(parts,part)then table.insert(parts,part)end end local function removePart(part)local idx=table.find(parts,part)if idx then table.remove(parts,idx)end end for _,part in pairs(workspace:GetDescendants())do addPart(part)end if partCon then partCon:Disconnect()end partCon=workspace.DescendantAdded:Connect(addPart)if removeCon then removeCon:Disconnect()end removeCon=workspace.DescendantRemoving:Connect(removePart)local function start()if con then return end enabled=true con=game:GetService("RunService").Heartbeat:Connect(function()if not enabled then return end local root=plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")if not root then return end local center=root.Position for _,part in pairs(parts)do if part.Parent and not part.Anchored then local pos=part.Position local dist=(Vector3.new(pos.X,center.Y,pos.Z)-center).Magnitude local angle=math.atan2(pos.Z-center.Z,pos.X-center.X)local newAngle=angle+math.rad(config.rotationSpeed)local targetPos=Vector3.new(center.X+math.cos(newAngle)*math.min(config.radius,dist),center.Y+(config.height*(math.abs(math.sin((pos.Y-center.Y)/config.height)))),center.Z+math.sin(newAngle)*math.min(config.radius,dist))local dir=(targetPos-part.Position).unit part.Velocity=dir*config.attractionStrength end end end)end local function stop()enabled=false if con then con:Disconnect()con=nil end end return{start=start,stop=stop,setRadius=function(v)config.radius=v end,setHeight=function(v)config.height=v end,setSpeed=function(v)config.rotationSpeed=v end,setStrength=function(v)config.attractionStrength=v end}end local api=ringControl()if api then getgenv().RingControl=api end
+local function ringControl()
+    local plr = game.Players.LocalPlayer
+    local enabled = false
+    local parts = {}
+    local config = {radius = 50, height = 100, rotationSpeed = 10, attractionStrength = 1000}
+    local con = nil
+    local partCon = nil
+    local removeCon = nil
+    local gui = nil
+    local screenGui = nil
+
+    local function retainPart(part)
+        if part:IsA("BasePart") and not part.Anchored and part:IsDescendantOf(workspace) then
+            if part.Parent == plr.Character or part:IsDescendantOf(plr.Character) then return false end
+            pcall(function()
+                part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+                part.CanCollide = false
+            end)
+            return true
+        end
+        return false
+    end
+
+    local function addPart(part)
+        if retainPart(part) and not table.find(parts, part) then
+            table.insert(parts, part)
+        end
+    end
+
+    local function removePart(part)
+        local idx = table.find(parts, part)
+        if idx then table.remove(parts, idx) end
+    end
+
+    for _, part in pairs(workspace:GetDescendants()) do addPart(part) end
+    if partCon then partCon:Disconnect() end
+    partCon = workspace.DescendantAdded:Connect(addPart)
+    if removeCon then removeCon:Disconnect() end
+    removeCon = workspace.DescendantRemoving:Connect(removePart)
+
+    local function createGUI()
+        if screenGui then return end
+        screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "黑洞控制面板"
+        screenGui.Parent = plr:WaitForChild("PlayerGui")
+        screenGui.ResetOnSpawn = false
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 280, 0, 360)
+        frame.Position = UDim2.new(0.5, -140, 0.5, -180)
+        frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        frame.BorderSizePixel = 0
+        frame.Parent = screenGui
+        frame.Active = true
+        frame.Draggable = true
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 16)
+        corner.Parent = frame
+
+        local title = Instance.new("TextLabel")
+        title.Size = UDim2.new(1, 0, 0, 40)
+        title.Text = "⚡ 黑洞控制面板 ⚡"
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 18
+        title.Parent = frame
+        local titleCorner = Instance.new("UICorner")
+        titleCorner.CornerRadius = UDim.new(0, 16)
+        titleCorner.Parent = title
+
+        local closeBtn = Instance.new("TextButton")
+        closeBtn.Size = UDim2.new(0, 30, 0, 30)
+        closeBtn.Position = UDim2.new(1, -36, 0, 5)
+        closeBtn.Text = "✕"
+        closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        closeBtn.Font = Enum.Font.GothamBold
+        closeBtn.TextSize = 18
+        closeBtn.Parent = frame
+        local cc = Instance.new("UICorner")
+        cc.CornerRadius = UDim.new(0, 8)
+        cc.Parent = closeBtn
+        closeBtn.MouseButton1Click:Connect(function()
+            if screenGui then screenGui:Destroy() screenGui = nil end
+            gui = nil
+        end)
+
+        local function createControl(labelText, configKey, posY, step, minVal, maxVal)
+            step = step or 10
+            minVal = minVal or 0
+            maxVal = maxVal or 10000
+
+            local bg = Instance.new("Frame")
+            bg.Size = UDim2.new(0.9, 0, 0, 42)
+            bg.Position = UDim2.new(0.05, 0, posY, 0)
+            bg.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+            bg.BorderSizePixel = 0
+            bg.Parent = frame
+            local bgCorner = Instance.new("UICorner")
+            bgCorner.CornerRadius = UDim.new(0, 8)
+            bgCorner.Parent = bg
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0.4, 0, 1, 0)
+            label.Position = UDim2.new(0.02, 0, 0, 0)
+            label.Text = labelText
+            label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.GothamMedium
+            label.TextSize = 14
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = bg
+
+            local display = Instance.new("TextLabel")
+            display.Size = UDim2.new(0.2, 0, 1, 0)
+            display.Position = UDim2.new(0.42, 0, 0, 0)
+            display.Text = tostring(config[configKey])
+            display.TextColor3 = Color3.fromRGB(255, 255, 255)
+            display.BackgroundTransparency = 1
+            display.Font = Enum.Font.GothamBold
+            display.TextSize = 15
+            display.Parent = bg
+
+            local minusBtn = Instance.new("TextButton")
+            minusBtn.Size = UDim2.new(0, 30, 0, 30)
+            minusBtn.Position = UDim2.new(0.68, 0, 0.5, -15)
+            minusBtn.Text = "-"
+            minusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            minusBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+            minusBtn.Font = Enum.Font.GothamBold
+            minusBtn.TextSize = 18
+            minusBtn.Parent = bg
+            local mc = Instance.new("UICorner")
+            mc.CornerRadius = UDim.new(0, 6)
+            mc.Parent = minusBtn
+
+            local plusBtn = Instance.new("TextButton")
+            plusBtn.Size = UDim2.new(0, 30, 0, 30)
+            plusBtn.Position = UDim2.new(0.82, 0, 0.5, -15)
+            plusBtn.Text = "+"
+            plusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            plusBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+            plusBtn.Font = Enum.Font.GothamBold
+            plusBtn.TextSize = 18
+            plusBtn.Parent = bg
+            local pc = Instance.new("UICorner")
+            pc.CornerRadius = UDim.new(0, 6)
+            pc.Parent = plusBtn
+
+            local function updateDisplay()
+                display.Text = tostring(config[configKey])
+                local method = "set" .. configKey:gsub("^%l", string.upper)
+                if enabled and _G.RingControl and _G.RingControl[method] then
+                    _G.RingControl[method](config[configKey])
+                end
+            end
+
+            minusBtn.MouseButton1Click:Connect(function()
+                local newVal = math.max(minVal, config[configKey] - step)
+                config[configKey] = newVal
+                updateDisplay()
+            end)
+
+            plusBtn.MouseButton1Click:Connect(function()
+                local newVal = math.min(maxVal, config[configKey] + step)
+                config[configKey] = newVal
+                updateDisplay()
+            end)
+        end
+
+        createControl("半径", "radius", 0.05, 10, 0, 1000)
+        createControl("高度", "height", 0.18, 10, 0, 1000)
+        createControl("转速", "rotationSpeed", 0.31, 1, 0, 200)
+        createControl("吸力", "attractionStrength", 0.44, 100, 0, 50000)
+    end
+
+    local function start()
+        if con then return end
+        enabled = true
+        createGUI()
+        con = game:GetService("RunService").Heartbeat:Connect(function()
+            if not enabled then return end
+            local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+            if not root then return end
+            local center = root.Position
+            for _, part in pairs(parts) do
+                if part.Parent and not part.Anchored then
+                    local pos = part.Position
+                    local dist = (Vector3.new(pos.X, center.Y, pos.Z) - center).Magnitude
+                    local angle = math.atan2(pos.Z - center.Z, pos.X - center.X)
+                    local newAngle = angle + math.rad(config.rotationSpeed)
+                    local targetPos = Vector3.new(
+                        center.X + math.cos(newAngle) * math.min(config.radius, dist),
+                        center.Y + (config.height * (math.abs(math.sin((pos.Y - center.Y) / config.height)))),
+                        center.Z + math.sin(newAngle) * math.min(config.radius, dist)
+                    )
+                    local dir = (targetPos - part.Position).unit
+                    part.Velocity = dir * config.attractionStrength
+                end
+            end
+        end)
+    end
+
+    local function stop()
+        enabled = false
+        if con then con:Disconnect() con = nil end
+        if screenGui then screenGui:Destroy() screenGui = nil end
+        gui = nil
+    end
+
+    return {
+        start = start,
+        stop = stop,
+        setRadius = function(v) config.radius = v end,
+        setHeight = function(v) config.height = v end,
+        setSpeed = function(v) config.rotationSpeed = v end,
+        setStrength = function(v) config.attractionStrength = v end,
+    }
+end
+
+local api = ringControl()
+if api then getgenv().RingControl = api end

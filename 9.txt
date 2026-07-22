@@ -59,7 +59,7 @@ local function ringControl2()
 
         local title = Instance.new("TextLabel")
         title.Size = UDim2.new(1, 0, 0, 40)
-        title.Text = "🌀 黑洞2 控制面板 🌀"
+        title.Text = "黑洞2"
         title.TextColor3 = Color3.fromRGB(0, 0, 0)
         title.BackgroundColor3 = Color3.fromRGB(0, 204, 204)
         title.Font = Enum.Font.Fondamento
@@ -83,6 +83,7 @@ local function ringControl2()
         closeCorner.Parent = closeBtn
         closeBtn.MouseButton1Click:Connect(function()
             if screenGui then screenGui:Destroy() screenGui = nil end
+            _G.CloseBlackhole2 = true
         end)
 
         local function createControl(labelText, configKey, posY, color, step, minVal, maxVal)
@@ -114,7 +115,7 @@ local function ringControl2()
             local display = Instance.new("TextLabel")
             display.Size = UDim2.new(0.2, 0, 1, 0)
             display.Position = UDim2.new(0.42, 0, 0, 0)
-            display.Text = tostring(config[configKey])
+            display.Text = tostring(tonumber(config[configKey]) or 0)
             display.TextColor3 = Color3.fromRGB(0, 0, 0)
             display.BackgroundTransparency = 1
             display.Font = Enum.Font.Fondamento
@@ -150,7 +151,7 @@ local function ringControl2()
             local inputBox = Instance.new("TextBox")
             inputBox.Size = UDim2.new(0.2, 0, 0, 30)
             inputBox.Position = UDim2.new(0.42, 0, 0.5, -15)
-            inputBox.Text = tostring(config[configKey])
+            inputBox.Text = tostring(tonumber(config[configKey]) or 0)
             inputBox.TextColor3 = Color3.fromRGB(0, 0, 0)
             inputBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
             inputBox.Font = Enum.Font.Fondamento
@@ -164,22 +165,23 @@ local function ringControl2()
             ibCorner.Parent = inputBox
 
             local function updateDisplay()
-                display.Text = tostring(config[configKey])
-                inputBox.Text = tostring(config[configKey])
+                local val = tonumber(config[configKey]) or 0
+                display.Text = tostring(val)
+                inputBox.Text = tostring(val)
                 local method = "set" .. configKey:gsub("^%l", string.upper)
                 if enabled and _G.RingControl2 and _G.RingControl2[method] then
-                    _G.RingControl2[method](config[configKey])
+                    _G.RingControl2[method](val)
                 end
             end
 
             minusBtn.MouseButton1Click:Connect(function()
-                local newVal = math.max(minVal, config[configKey] - step)
+                local newVal = math.max(minVal, (tonumber(config[configKey]) or 0) - step)
                 config[configKey] = newVal
                 updateDisplay()
             end)
 
             plusBtn.MouseButton1Click:Connect(function()
-                local newVal = math.min(maxVal, config[configKey] + step)
+                local newVal = math.min(maxVal, (tonumber(config[configKey]) or 0) + step)
                 config[configKey] = newVal
                 updateDisplay()
             end)
@@ -192,7 +194,8 @@ local function ringControl2()
                         config[configKey] = newVal
                         updateDisplay()
                     else
-                        inputBox.Text = tostring(config[configKey])
+                        local val = tonumber(config[configKey]) or 0
+                        inputBox.Text = tostring(val)
                     end
                 end
             end)
@@ -255,10 +258,10 @@ local function ringControl2()
     return {
         start = start,
         stop = stop,
-        setRadius = function(v) config.radius = v end,
-        setHeight = function(v) config.height = v end,
-        setSpeed = function(v) config.rotationSpeed = v end,
-        setStrength = function(v) config.attractionStrength = v end,
+        setRadius = function(v) config.radius = tonumber(v) or 50 end,
+        setHeight = function(v) config.height = tonumber(v) or 100 end,
+        setSpeed = function(v) config.rotationSpeed = tonumber(v) or 10 end,
+        setStrength = function(v) config.attractionStrength = tonumber(v) or 1000 end,
     }
 end
 

@@ -1,0 +1,1 @@
+local function infJump()pcall(function()local uis=game:GetService("UserInputService")local en=true uis.JumpRequest:Connect(function()if en and game.Players.LocalPlayer.Character then local hum=game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping)end end end)end)end infJump()

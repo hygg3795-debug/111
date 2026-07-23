@@ -25,9 +25,8 @@ Icon = BRAND.icon,
 CornerRadius = UDim.new(0, 26),
 StrokeThickness = 4,
 Color = ColorSequence.new({
-ColorSequenceKeypoint.new(0, Color3.fromHex("FF0080")),
-ColorSequenceKeypoint.new(0.5, Color3.fromHex("FF8C00")),
-ColorSequenceKeypoint.new(1, Color3.fromHex("40E0D0")),
+ColorSequenceKeypoint.new(0, Color3.fromHex("00BFFF")),
+ColorSequenceKeypoint.new(1, Color3.fromHex("8A2BE2")),
 }),
 Draggable = true,
 })
@@ -36,11 +35,6 @@ local timeTag = Window:Tag({Title = os.date("%H:%M:%S"), Color = Color3.fromHex(
 task.spawn(function() while Window do task.wait(1) pcall(function() timeTag:SetTitle(os.date("%H:%M:%S")) end) end end)
 
 local tab = Window:Tab({Title = "通用", Icon = "settings"})
-
-local jumpApi = nil
-local walkApi = nil
-local spinApi = nil
-local espApi = nil
 
 tab:Toggle({
 Title = "防踢",
@@ -143,74 +137,6 @@ end)
 _G.InfJumpCon = conn
 else
 if _G.InfJumpCon then _G.InfJumpCon:Disconnect() _G.InfJumpCon = nil end
-end
-end,
-})
-
-tab:Slider({
-Title = "跳跃高度",
-Value = {Min = 7.2, Max = 200, Default = 7.2},
-Callback = function(val)
-if not jumpApi then
-loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/6.txt"))()
-jumpApi = getgenv().JumpControl
-if jumpApi then jumpApi:start() end
-end
-if jumpApi then jumpApi:setJumpHeight(val) end
-end,
-})
-
-tab:Slider({
-Title = "步行速度",
-Value = {Min = 16, Max = 400, Default = 16},
-Callback = function(val)
-if not walkApi then
-loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/7.txt"))()
-walkApi = getgenv().WalkControl
-if walkApi then walkApi:start() end
-end
-if walkApi then walkApi:setWalkSpeed(val) end
-end,
-})
-
-tab:Toggle({
-Title = "旋转模式",
-Value = false,
-Callback = function(val)
-if not spinApi then
-loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/8.txt"))()
-spinApi = getgenv().SpinControl
-if spinApi then spinApi:start() end
-end
-if spinApi then spinApi:setSpinEnabled(val) end
-end,
-})
-
-tab:Slider({
-Title = "旋转速度",
-Value = {Min = 0, Max = 50, Default = 0},
-Callback = function(val)
-if not spinApi then
-loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/8.txt"))()
-spinApi = getgenv().SpinControl
-if spinApi then spinApi:start() end
-end
-if spinApi then spinApi:setSpinSpeed(val) end
-end,
-})
-
-tab:Toggle({
-Title = "透视",
-Value = false,
-Callback = function(val)
-if val then
-if not espApi then
-loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/10.txt"))()
-espApi = getgenv().ESPControl
-end
-if espApi then espApi:start() end
-else
-if espApi then espApi:stop() end
 end
 end,
 })

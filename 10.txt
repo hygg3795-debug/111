@@ -1,37 +1,52 @@
 local function hover()
     local plr = game.Players.LocalPlayer
     local enabled = false
-    local con = nil
-    local charCon = nil
-    local z = Vector3.zero
+    local platform = nil
+    local platformCon = nil
+    local characterCon = nil
 
-    local function bind(c)
-        local r = c:WaitForChild("HumanoidRootPart")
-        if r then
-            if con then con:Disconnect() con = nil end
-            con = game:GetService("RunService").Heartbeat:Connect(function()
-                if not r.Parent then
-                    con:Disconnect()
-                    con = nil
-                    return
-                end
-                local v = r.AssemblyLinearVelocity
-                r.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
-            end)
+    local function createPlatform()
+        if platform then platform:Destroy() end
+        platform = Instance.new("Part")
+        platform.Size = Vector3.new(3, 0.2, 3)
+        platform.Transparency = 1
+        platform.Anchored = true
+        platform.CanCollide = true
+        platform.Parent = workspace
+    end
+
+    local function updatePlatform()
+        local char = plr.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root and platform then
+            platform.CFrame = CFrame.new(root.Position.X, root.Position.Y - 3.1, root.Position.Z)
         end
     end
 
     local function start()
-        if charCon then charCon:Disconnect() end
-        bind(plr.Character)
-        charCon = plr.CharacterAdded:Connect(bind)
+        if enabled then return end
         enabled = true
+
+        if not plr.Character then
+            plr.CharacterAdded:Wait()
+        end
+
+        createPlatform()
+        updatePlatform()
+
+        platformCon = game:GetService("RunService").Heartbeat:Connect(updatePlatform)
+
+        characterCon = plr.CharacterAdded:Connect(function()
+            createPlatform()
+            updatePlatform()
+        end)
     end
 
     local function stop()
         enabled = false
-        if con then con:Disconnect() con = nil end
-        if charCon then charCon:Disconnect() charCon = nil end
+        if platformCon then platformCon:Disconnect() platformCon = nil end
+        if characterCon then characterCon:Disconnect() characterCon = nil end
+        if platform then platform:Destroy() platform = nil end
     end
 
     return {start = start, stop = stop}

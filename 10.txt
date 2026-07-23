@@ -19,7 +19,14 @@ local function hover()
         local char = plr.Character
         local root = char and char:FindFirstChild("HumanoidRootPart")
         if root and platform then
-            platform.CFrame = CFrame.new(root.Position.X, root.Position.Y - 3.1, root.Position.Z)
+            local pos = root.Position
+            local vel = root.AssemblyLinearVelocity
+            if vel.Y > 0 then
+                -- 跳跃时让平台跟随上升，但保持紧贴脚底
+                platform.CFrame = CFrame.new(pos.X, pos.Y - 1.5, pos.Z)
+            else
+                platform.CFrame = CFrame.new(pos.X, pos.Y - 1.5, pos.Z)
+            end
         end
     end
 

@@ -27,11 +27,14 @@ Draggable = true,
 Window:Tag({Title = BRAND.name .. " " .. BRAND.version, Color = Color3.fromHex(BRAND.accent)})
 local timeTag = Window:Tag({Title = os.date("%H:%M:%S"), Color = Color3.fromHex("#00ffff")})
 task.spawn(function() while Window do task.wait(1) pcall(function() timeTag:SetTitle(os.date("%H:%M:%S")) end) end end)
+
 local tab = Window:Tab({Title = "通用", Icon = "settings"})
+
 local jumpApi = nil
 local walkApi = nil
 local spinApi = nil
 local espApi = nil
+
 tab:Toggle({
 Title = "防踢",
 Value = false,
@@ -48,6 +51,7 @@ if _G.AntiAFKCon then _G.AntiAFKCon:Disconnect() _G.AntiAFKCon = nil end
 end
 end,
 })
+
 local flyEnabled = false
 local flyConnections = {}
 local flyBody = {}
@@ -111,8 +115,10 @@ flyConnections = {}
 end
 end,
 })
+
 local function noFall()local plr=game.Players.LocalPlayer local con=nil local charCon=nil local z=Vector3.zero local function bind(c)local r=c:WaitForChild("HumanoidRootPart")if r then if con then con:Disconnect()con=nil end con=game:GetService("RunService").Heartbeat:Connect(function()if not r.Parent then con:Disconnect()con=nil return end local v=r.AssemblyLinearVelocity r.AssemblyLinearVelocity=z game:GetService("RunService").RenderStepped:Wait()r.AssemblyLinearVelocity=v end)end end local function start()if charCon then charCon:Disconnect()end bind(plr.Character)charCon=plr.CharacterAdded:Connect(bind)end local function stop()if con then con:Disconnect()con=nil end if charCon then charCon:Disconnect()charCon=nil end end return{start=start,stop=stop}end
 tab:Toggle({Title="防摔",Value=false,Callback=function(val)local api=_G.NoFallAPI if not api then api=noFall()_G.NoFallAPI=api end if val then api.start()else api.stop()end end})
+
 tab:Toggle({
 Title = "无限跳",
 Value = false,
@@ -133,30 +139,107 @@ if _G.InfJumpCon then _G.InfJumpCon:Disconnect() _G.InfJumpCon = nil end
 end
 end,
 })
-tab:Slider({
-Title = "跳跃高度",
-Value = {Min = 7.2, Max = 200, Default = 7.2},
-Callback = function(val)
-if not jumpApi then
-loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/6.txt"))()
-jumpApi = getgenv().JumpControl
-if jumpApi then jumpApi:start() end
+
+local jumpHeight = 50
+local walkSpeed = 16
+
+local function createStepControl(title, minVal, maxVal, step, getVal, setVal)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 36)
+    frame.BackgroundTransparency = 1
+    frame.Parent = tab
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.35, 0, 1, 0)
+    label.Text = title
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamMedium
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    local display = Instance.new("TextLabel")
+    display.Size = UDim2.new(0.15, 0, 1, 0)
+    display.Position = UDim2.new(0.4, 0, 0, 0)
+    display.Text = tostring(getVal())
+    display.TextColor3 = Color3.fromRGB(255, 255, 255)
+    display.BackgroundTransparency = 1
+    display.Font = Enum.Font.GothamBold
+    display.TextSize = 16
+    display.Parent = frame
+
+    local minus = Instance.new("TextButton")
+    minus.Size = UDim2.new(0, 30, 0, 30)
+    minus.Position = UDim2.new(0.65, 0, 0.5, -15)
+    minus.Text = "-"
+    minus.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minus.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    minus.Font = Enum.Font.GothamBold
+    minus.TextSize = 20
+    minus.Parent = frame
+    local mc = Instance.new("UICorner")
+    mc.CornerRadius = UDim.new(0, 6)
+    mc.Parent = minus
+
+    local plus = Instance.new("TextButton")
+    plus.Size = UDim2.new(0, 30, 0, 30)
+    plus.Position = UDim2.new(0.8, 0, 0.5, -15)
+    plus.Text = "+"
+    plus.TextColor3 = Color3.fromRGB(255, 255, 255)
+    plus.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    plus.Font = Enum.Font.GothamBold
+    plus.TextSize = 20
+    plus.Parent = frame
+    local pc = Instance.new("UICorner")
+    pc.CornerRadius = UDim.new(0, 6)
+    pc.Parent = plus
+
+    local function updateDisplay()
+        display.Text = tostring(getVal())
+    end
+
+    minus.MouseButton1Click:Connect(function()
+        local newVal = math.max(minVal, getVal() - step)
+        setVal(newVal)
+        updateDisplay()
+    end)
+
+    plus.MouseButton1Click:Connect(function()
+        local newVal = math.min(maxVal, getVal() + step)
+        setVal(newVal)
+        updateDisplay()
+    end)
+
+    return {update = updateDisplay}
 end
-if jumpApi then jumpApi:setJumpHeight(val) end
-end,
-})
-tab:Slider({
-Title = "步行速度",
-Value = {Min = 16, Max = 400, Default = 16},
-Callback = function(val)
-if not walkApi then
-loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/7.txt"))()
-walkApi = getgenv().WalkControl
-if walkApi then walkApi:start() end
-end
-if walkApi then walkApi:setWalkSpeed(val) end
-end,
-})
+
+local jumpControl = createStepControl("跳跃高度", 7.2, 200, 5,
+    function() return jumpHeight end,
+    function(val)
+        jumpHeight = val
+        if not jumpApi then
+            loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/6.txt"))()
+            jumpApi = getgenv().JumpControl
+            if jumpApi then jumpApi:start() end
+        end
+        if jumpApi then jumpApi:setJumpHeight(val) end
+    end
+)
+
+local walkControl = createStepControl("步行速度", 16, 400, 10,
+    function() return walkSpeed end,
+    function(val)
+        walkSpeed = val
+        if not walkApi then
+            loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/7.txt"))()
+            walkApi = getgenv().WalkControl
+            if walkApi then walkApi:start() end
+        end
+        if walkApi then walkApi:setWalkSpeed(val) end
+    end
+)
+
 tab:Toggle({
 Title = "旋转模式",
 Value = false,
@@ -169,6 +252,7 @@ end
 if spinApi then spinApi:setSpinEnabled(val) end
 end,
 })
+
 tab:Slider({
 Title = "旋转速度",
 Value = {Min = 0, Max = 50, Default = 0},
@@ -181,6 +265,7 @@ end
 if spinApi then spinApi:setSpinSpeed(val) end
 end,
 })
+
 tab:Toggle({
 Title = "透视",
 Value = false,
@@ -196,7 +281,9 @@ if espApi then espApi:stop() end
 end
 end,
 })
+
 local blackholeTab = Window:Tab({Title = "黑洞", Icon = "circle"})
+
 local bhConfig = {radius = 50, height = 100, speed = 10, strength = 1000}
 local bhRunning = false
 local bhApi = nil
@@ -233,6 +320,7 @@ Title = "开关",
 Value = false,
 Callback = function(val) toggleBlackhole(val) end,
 })
+
 local bh2Config = {radius = 50, height = 100, speed = 10, strength = 1000}
 local bh2Running = false
 local bh2Api = nil
@@ -269,93 +357,7 @@ Title = "开关",
 Value = false,
 Callback = function(val) toggleBH2(val) end,
 })
-local playerTab = Window:Tab({Title = "玩家", Icon = "users"})
-local selectedPlayer = nil
-local selectedLabel = playerTab:Paragraph({
-Title = "当前选中",
-Desc = "未选择",
-})
-local listContainer = Instance.new("ScrollingFrame")
-listContainer.Size = UDim2.new(1, 0, 0.55, 0)
-listContainer.Position = UDim2.new(0, 0, 0.2, 0)
-listContainer.BackgroundTransparency = 1
-listContainer.ScrollBarThickness = 6
-listContainer.Parent = playerTab
-local listLayout = Instance.new("UIListLayout")
-listLayout.Padding = UDim.new(0, 4)
-listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-listLayout.Parent = listContainer
-local function refreshPlayerList()
-for _, child in pairs(listContainer:GetChildren()) do
-if child:IsA("TextButton") then child:Destroy() end
-end
-local players = game.Players:GetPlayers()
-local count = 0
-for _, p in pairs(players) do
-if p ~= game.Players.LocalPlayer then
-count = count + 1
-local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(1, -10, 0, 34)
-btn.Position = UDim2.new(0, 5, 0, 0)
-local displayName = p.DisplayName or p.Name
-btn.Text = p.Name .. " (" .. displayName .. ")"
-btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-btn.Font = Enum.Font.GothamMedium
-btn.TextSize = 16
-btn.Parent = listContainer
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 6)
-corner.Parent = btn
-btn.MouseButton1Click:Connect(function()
-selectedPlayer = p
-selectedLabel:SetDesc("✅ " .. p.Name .. " (" .. displayName .. ")")
-WindUI:Notify({Title = "已选中", Content = "已选择 " .. p.Name, Duration = 2, Icon = "check"})
-end)
-end
-end
-if count == 0 then
-local label = Instance.new("TextLabel")
-label.Size = UDim2.new(1, 0, 0, 34)
-label.Text = "没有其他玩家"
-label.TextColor3 = Color3.fromRGB(150, 150, 150)
-label.BackgroundTransparency = 1
-label.Font = Enum.Font.GothamMedium
-label.TextSize = 16
-label.Parent = listContainer
-end
-listContainer.CanvasSize = UDim2.new(0, 0, 0, count * 38 + 10)
-end
-playerTab:Button({
-Title = "刷新玩家列表",
-Callback = function()
-refreshPlayerList()
-end,
-})
-playerTab:Button({
-Title = "传送到选中玩家",
-Callback = function()
-if not selectedPlayer then
-WindUI:Notify({Title = "错误", Content = "请先在列表中选择一个玩家", Duration = 2, Icon = "alert"})
-return
-end
-local char = selectedPlayer.Character
-local root = char and char:FindFirstChild("HumanoidRootPart")
-if not root then
-WindUI:Notify({Title = "错误", Content = "该玩家没有角色", Duration = 2, Icon = "alert"})
-return
-end
-local myRoot = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-if myRoot then
-myRoot.CFrame = root.CFrame + Vector3.new(0, 2, 0)
-WindUI:Notify({Title = "传送成功", Content = "已传送到 " .. selectedPlayer.Name, Duration = 2, Icon = "check"})
-end
-end,
-})
-task.spawn(function()
-task.wait(1)
-refreshPlayerList()
-end)
+
 local superTab = Window:Tab({Title = "超人", Icon = "zap"})
 superTab:Button({
 Title = "祖国人",
@@ -399,6 +401,7 @@ WindUI:Notify({Title = "加载失败", Content = tostring(err), Duration = 3, Ic
 end
 end,
 })
+
 _G._LCF_WindUI = WindUI
 _G._LCF_TmplWin = Window
 print("[" .. BRAND.name .. "] UI 加载完成 ✅")

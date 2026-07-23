@@ -20,8 +20,15 @@ if current == "Light" then WindUI:SetTheme("Dark") WindUI:Notify({Title = "已�
 else WindUI:SetTheme("Light") WindUI:Notify({Title = "已切换明亮主题", Duration = 2, Icon = "sun"}) end
 end, 990)
 Window:EditOpenButton({
-Title = BRAND.name, Icon = BRAND.icon, CornerRadius = UDim.new(0, 26), StrokeThickness = 4,
-Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHex("ADD8E6")), ColorSequenceKeypoint.new(0.5, Color3.fromHex("4169E1")), ColorSequenceKeypoint.new(1, Color3.fromHex("ADD8E6"))}),
+Title = BRAND.name,
+Icon = BRAND.icon,
+CornerRadius = UDim.new(0, 26),
+StrokeThickness = 4,
+Color = ColorSequence.new({
+ColorSequenceKeypoint.new(0, Color3.fromHex("FF0080")),
+ColorSequenceKeypoint.new(0.5, Color3.fromHex("FF8C00")),
+ColorSequenceKeypoint.new(1, Color3.fromHex("40E0D0")),
+}),
 Draggable = true,
 })
 Window:Tag({Title = BRAND.name .. " " .. BRAND.version, Color = Color3.fromHex(BRAND.accent)})
@@ -140,105 +147,31 @@ end
 end,
 })
 
-local jumpHeight = 50
-local walkSpeed = 16
-
-local function createStepControl(title, minVal, maxVal, step, getVal, setVal)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 0, 36)
-    frame.BackgroundTransparency = 1
-    frame.Parent = tab
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.35, 0, 1, 0)
-    label.Text = title
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.GothamMedium
-    label.TextSize = 16
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
-
-    local display = Instance.new("TextLabel")
-    display.Size = UDim2.new(0.15, 0, 1, 0)
-    display.Position = UDim2.new(0.4, 0, 0, 0)
-    display.Text = tostring(getVal())
-    display.TextColor3 = Color3.fromRGB(255, 255, 255)
-    display.BackgroundTransparency = 1
-    display.Font = Enum.Font.GothamBold
-    display.TextSize = 16
-    display.Parent = frame
-
-    local minus = Instance.new("TextButton")
-    minus.Size = UDim2.new(0, 30, 0, 30)
-    minus.Position = UDim2.new(0.65, 0, 0.5, -15)
-    minus.Text = "-"
-    minus.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minus.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-    minus.Font = Enum.Font.GothamBold
-    minus.TextSize = 20
-    minus.Parent = frame
-    local mc = Instance.new("UICorner")
-    mc.CornerRadius = UDim.new(0, 6)
-    mc.Parent = minus
-
-    local plus = Instance.new("TextButton")
-    plus.Size = UDim2.new(0, 30, 0, 30)
-    plus.Position = UDim2.new(0.8, 0, 0.5, -15)
-    plus.Text = "+"
-    plus.TextColor3 = Color3.fromRGB(255, 255, 255)
-    plus.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-    plus.Font = Enum.Font.GothamBold
-    plus.TextSize = 20
-    plus.Parent = frame
-    local pc = Instance.new("UICorner")
-    pc.CornerRadius = UDim.new(0, 6)
-    pc.Parent = plus
-
-    local function updateDisplay()
-        display.Text = tostring(getVal())
-    end
-
-    minus.MouseButton1Click:Connect(function()
-        local newVal = math.max(minVal, getVal() - step)
-        setVal(newVal)
-        updateDisplay()
-    end)
-
-    plus.MouseButton1Click:Connect(function()
-        local newVal = math.min(maxVal, getVal() + step)
-        setVal(newVal)
-        updateDisplay()
-    end)
-
-    return {update = updateDisplay}
+tab:Slider({
+Title = "跳跃高度",
+Value = {Min = 7.2, Max = 200, Default = 7.2},
+Callback = function(val)
+if not jumpApi then
+loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/6.txt"))()
+jumpApi = getgenv().JumpControl
+if jumpApi then jumpApi:start() end
 end
+if jumpApi then jumpApi:setJumpHeight(val) end
+end,
+})
 
-local jumpControl = createStepControl("跳跃高度", 7.2, 200, 5,
-    function() return jumpHeight end,
-    function(val)
-        jumpHeight = val
-        if not jumpApi then
-            loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/6.txt"))()
-            jumpApi = getgenv().JumpControl
-            if jumpApi then jumpApi:start() end
-        end
-        if jumpApi then jumpApi:setJumpHeight(val) end
-    end
-)
-
-local walkControl = createStepControl("步行速度", 16, 400, 10,
-    function() return walkSpeed end,
-    function(val)
-        walkSpeed = val
-        if not walkApi then
-            loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/7.txt"))()
-            walkApi = getgenv().WalkControl
-            if walkApi then walkApi:start() end
-        end
-        if walkApi then walkApi:setWalkSpeed(val) end
-    end
-)
+tab:Slider({
+Title = "步行速度",
+Value = {Min = 16, Max = 400, Default = 16},
+Callback = function(val)
+if not walkApi then
+loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/7.txt"))()
+walkApi = getgenv().WalkControl
+if walkApi then walkApi:start() end
+end
+if walkApi then walkApi:setWalkSpeed(val) end
+end,
+})
 
 tab:Toggle({
 Title = "旋转模式",

@@ -8,6 +8,8 @@ local function ringControl()
     local removeCon = nil
     local screenGui = nil
     local mainFrame = nil
+    local minimized = false
+    local controls = {}
 
     local function retainPart(part)
         if part:IsA("BasePart") and not part.Anchored and part:IsDescendantOf(workspace) then
@@ -37,6 +39,18 @@ local function ringControl()
     partCon = workspace.DescendantAdded:Connect(addPart)
     if removeCon then removeCon:Disconnect() end
     removeCon = workspace.DescendantRemoving:Connect(removePart)
+
+    local function toggleMinimize()
+        minimized = not minimized
+        for _, c in pairs(controls) do
+            c.Visible = not minimized
+        end
+        if minimized then
+            mainFrame.Size = UDim2.new(0, 300, 0, 40)
+        else
+            mainFrame.Size = UDim2.new(0, 300, 0, 500)
+        end
+    end
 
     local function createGUI()
         if screenGui then return end
@@ -84,7 +98,24 @@ local function ringControl()
         closeBtn.MouseButton1Click:Connect(function()
             if screenGui then screenGui:Destroy() screenGui = nil end
             _G.CloseBlackhole1 = true
+            if _G.HyggUI and _G.HyggUI.toggleBlackhole then
+                _G.HyggUI.toggleBlackhole(false)
+            end
         end)
+
+        local minBtn = Instance.new("TextButton")
+        minBtn.Size = UDim2.new(0, 30, 0, 30)
+        minBtn.Position = UDim2.new(1, -70, 0, 5)
+        minBtn.Text = "－"
+        minBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        minBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 200)
+        minBtn.Font = Enum.Font.Fondamento
+        minBtn.TextSize = 20
+        minBtn.Parent = mainFrame
+        local minCorner = Instance.new("UICorner")
+        minCorner.CornerRadius = UDim.new(0, 15)
+        minCorner.Parent = minBtn
+        minBtn.MouseButton1Click:Connect(toggleMinimize)
 
         local function createControl(labelText, configKey, posY, color, step, minVal, maxVal)
             step = step or 10
@@ -97,6 +128,7 @@ local function ringControl()
             bg.BackgroundColor3 = color
             bg.BorderSizePixel = 0
             bg.Parent = mainFrame
+            table.insert(controls, bg)
             local bgCorner = Instance.new("UICorner")
             bgCorner.CornerRadius = UDim.new(0, 8)
             bgCorner.Parent = bg
@@ -253,6 +285,7 @@ local function ringControl()
         if con then con:Disconnect() con = nil end
         if screenGui then screenGui:Destroy() screenGui = nil end
         mainFrame = nil
+        controls = {}
     end
 
     return {

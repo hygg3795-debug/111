@@ -363,32 +363,22 @@ local dropdown = playerTab:Dropdown({
         end
     end,
 })
-dropdown.Size = UDim2.new(1, -48, 0, 36)
-dropdown.Position = UDim2.new(0, 0, 0, 0)
 
-local refreshBtn = Instance.new("TextButton")
-refreshBtn.Size = UDim2.new(0, 36, 0, 36)
-refreshBtn.Position = UDim2.new(1, -42, 0, 0)
-refreshBtn.Text = "↻"
-refreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-refreshBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-refreshBtn.Font = Enum.Font.GothamBold
-refreshBtn.TextSize = 22
-refreshBtn.Parent = playerTab
-local rc = Instance.new("UICorner")
-rc.CornerRadius = UDim.new(0, 8)
-rc.Parent = refreshBtn
-
-refreshBtn.MouseButton1Click:Connect(function()
-    local api = loadPlayerApi()
-    if api then
-        local list = api:getPlayerList()
-        dropdown:Refresh(list)
-        if #list == 0 then
-            WindUI:Notify({Title = "提示", Content = "没有其他玩家在服务器里", Duration = 2, Icon = "info"})
+playerTab:Button({
+    Title = "刷新玩家列表",
+    Callback = function()
+        local api = loadPlayerApi()
+        if api then
+            local list = api:getPlayerList()
+            dropdown:Refresh(list)
+            if #list == 0 then
+                WindUI:Notify({Title = "提示", Content = "没有其他玩家在服务器里", Duration = 2, Icon = "info"})
+            else
+                WindUI:Notify({Title = "刷新成功", Content = "找到 " .. #list .. " 名玩家", Duration = 2, Icon = "check"})
+            end
         end
-    end
-end)
+    end,
+})
 
 playerTab:Button({
     Title = "传送到选中玩家",

@@ -1,0 +1,410 @@
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/refs/heads/main/dist/main.lua"))()
+local BRAND = {name = "hygg脚本", version = "v1.0", author = "hygg", folder = "hyggHub", icon = "zap", theme = "Dark", accent = "#FF6B35"}
+local Window = WindUI:CreateWindow({
+Title = BRAND.name, Icon = BRAND.icon, IconThemed = true, Author = BRAND.version, Folder = BRAND.folder,
+Size = UDim2.fromOffset(640, 420), Transparent = true, Theme = BRAND.theme, HideSearchBar = false, Resizable = true,
+SideBarWidth = 240,
+BackgroundTransparency = 0.5,
+Search = {Enabled = true, Placeholder = "搜索...", Callback = function(text) end},
+User = {Enabled = true, Callback = function() WindUI:Notify({Title = "玩家信息", Content = game.Players.LocalPlayer.Name, Duration = 2, Icon = "user"}) end},
+})
+local bg = Instance.new("ImageLabel")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.Image = "https://hygg3795-debug.github.io/111/bg.jpg"
+bg.BackgroundTransparency = 1
+bg.ScaleType = Enum.ScaleType.Fit
+bg.Parent = Window.UIElements.Main
+Window:CreateTopbarButton("ThemeToggle", "moon", function()
+local current = WindUI:GetCurrentTheme()
+if current == "Light" then WindUI:SetTheme("Dark") WindUI:Notify({Title = "已切换暗黑主题", Duration = 2, Icon = "moon"})
+else WindUI:SetTheme("Light") WindUI:Notify({Title = "已切换明亮主题", Duration = 2, Icon = "sun"}) end
+end, 990)
+Window:EditOpenButton({
+Title = BRAND.name, Icon = BRAND.icon, CornerRadius = UDim.new(0, 26), StrokeThickness = 4,
+Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromHex("ADD8E6")), ColorSequenceKeypoint.new(0.5, Color3.fromHex("4169E1")), ColorSequenceKeypoint.new(1, Color3.fromHex("ADD8E6"))}),
+Draggable = true,
+})
+Window:Tag({Title = BRAND.name .. " " .. BRAND.version, Color = Color3.fromHex(BRAND.accent)})
+local timeTag = Window:Tag({Title = os.date("%H:%M:%S"), Color = Color3.fromHex("#00ffff")})
+task.spawn(function() while Window do task.wait(1) pcall(function() timeTag:SetTitle(os.date("%H:%M:%S")) end) end end)
+
+local tab = Window:Tab({Title = "通用", Icon = "settings"})
+
+local jumpApi = nil
+local walkApi = nil
+local spinApi = nil
+local espApi = nil
+
+tab:Toggle({
+Title = "防踢",
+Value = false,
+Callback = function(val)
+if val then
+local vu = game:GetService("VirtualUser")
+local con = game.Players.LocalPlayer.Idled:Connect(function()
+vu:CaptureController()
+vu:ClickButton2(Vector2.new())
+end)
+_G.AntiAFKCon = con
+else
+if _G.AntiAFKCon then _G.AntiAFKCon:Disconnect() _G.AntiAFKCon = nil end
+end
+end,
+})
+
+local flyEnabled = false
+local flyConnections = {}
+local flyBody = {}
+tab:Toggle({
+Title = "飞行",
+Value = false,
+Callback = function(val)
+flyEnabled = val
+local plr = game.Players.LocalPlayer
+local char = plr.Character or plr.CharacterAdded:Wait()
+local hum = char:FindFirstChildOfClass("Humanoid")
+local root = char:FindFirstChild("HumanoidRootPart")
+if val then
+if hum then
+for _,state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+hum:SetStateEnabled(state, false)
+end
+hum:ChangeState(Enum.HumanoidStateType.Swimming)
+end
+if char.Animate then char.Animate.Disabled = true end
+local bg = Instance.new("BodyGyro", root)
+bg.P = 9e4
+bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+bg.CFrame = root.CFrame
+local bv = Instance.new("BodyVelocity", root)
+bv.Velocity = Vector3.new(0,0,0)
+bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+if hum then hum.PlatformStand = true end
+flyBody = {bg = bg, bv = bv}
+local conn
+conn = game:GetService("RunService").RenderStepped:Connect(function()
+if not flyEnabled or not char or not hum or hum.Health <= 0 then
+conn:Disconnect()
+return
+end
+if root then bg.CFrame = workspace.CurrentCamera.CoordinateFrame end
+end)
+table.insert(flyConnections, conn)
+local conn2
+conn2 = game:GetService("RunService").Heartbeat:Connect(function()
+if not flyEnabled or not char or not hum then return end
+if hum.MoveDirection.Magnitude > 0 then
+char:TranslateBy(hum.MoveDirection * 1)
+end
+end)
+table.insert(flyConnections, conn2)
+else
+if hum then
+for _,state in pairs(Enum.HumanoidStateType:GetEnumItems()) do
+hum:SetStateEnabled(state, true)
+end
+hum:ChangeState(Enum.HumanoidStateType.Running)
+hum.PlatformStand = false
+end
+if char.Animate then char.Animate.Disabled = false end
+if flyBody.bg then flyBody.bg:Destroy() end
+if flyBody.bv then flyBody.bv:Destroy() end
+flyBody = {}
+for _,c in pairs(flyConnections) do pcall(function() c:Disconnect() end) end
+flyConnections = {}
+end
+end,
+})
+
+local function noFall()local plr=game.Players.LocalPlayer local con=nil local charCon=nil local z=Vector3.zero local function bind(c)local r=c:WaitForChild("HumanoidRootPart")if r then if con then con:Disconnect()con=nil end con=game:GetService("RunService").Heartbeat:Connect(function()if not r.Parent then con:Disconnect()con=nil return end local v=r.AssemblyLinearVelocity r.AssemblyLinearVelocity=z game:GetService("RunService").RenderStepped:Wait()r.AssemblyLinearVelocity=v end)end end local function start()if charCon then charCon:Disconnect()end bind(plr.Character)charCon=plr.CharacterAdded:Connect(bind)end local function stop()if con then con:Disconnect()con=nil end if charCon then charCon:Disconnect()charCon=nil end end return{start=start,stop=stop}end
+tab:Toggle({Title="防摔",Value=false,Callback=function(val)local api=_G.NoFallAPI if not api then api=noFall()_G.NoFallAPI=api end if val then api.start()else api.stop()end end})
+
+tab:Toggle({
+Title = "无限跳",
+Value = false,
+Callback = function(val)
+local uis = game:GetService("UserInputService")
+if val then
+local conn
+conn = uis.JumpRequest:Connect(function()
+local plr = game.Players.LocalPlayer
+if plr and plr.Character then
+local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+end
+end)
+_G.InfJumpCon = conn
+else
+if _G.InfJumpCon then _G.InfJumpCon:Disconnect() _G.InfJumpCon = nil end
+end
+end,
+})
+
+tab:Slider({
+Title = "跳跃高度",
+Value = {Min = 7.2, Max = 200, Default = 7.2},
+Callback = function(val)
+if not jumpApi then
+loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/6.txt"))()
+jumpApi = getgenv().JumpControl
+if jumpApi then jumpApi:start() end
+end
+if jumpApi then jumpApi:setJumpHeight(val) end
+end,
+})
+
+tab:Slider({
+Title = "步行速度",
+Value = {Min = 16, Max = 400, Default = 16},
+Callback = function(val)
+if not walkApi then
+loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/7.txt"))()
+walkApi = getgenv().WalkControl
+if walkApi then walkApi:start() end
+end
+if walkApi then walkApi:setWalkSpeed(val) end
+end,
+})
+
+tab:Toggle({
+Title = "旋转模式",
+Value = false,
+Callback = function(val)
+if not spinApi then
+loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/8.txt"))()
+spinApi = getgenv().SpinControl
+if spinApi then spinApi:start() end
+end
+if spinApi then spinApi:setSpinEnabled(val) end
+end,
+})
+
+tab:Slider({
+Title = "旋转速度",
+Value = {Min = 0, Max = 50, Default = 0},
+Callback = function(val)
+if not spinApi then
+loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/8.txt"))()
+spinApi = getgenv().SpinControl
+if spinApi then spinApi:start() end
+end
+if spinApi then spinApi:setSpinSpeed(val) end
+end,
+})
+
+tab:Toggle({
+Title = "透视",
+Value = false,
+Callback = function(val)
+if val then
+if not espApi then
+loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/10.txt"))()
+espApi = getgenv().ESPControl
+end
+if espApi then espApi:start() end
+else
+if espApi then espApi:stop() end
+end
+end,
+})
+
+local superTab = Window:Tab({Title = "超人", Icon = "zap"})
+superTab:Button({
+Title = "祖国人",
+Desc = "点击加载祖国人脚本",
+Callback = function()
+local success, err = pcall(function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/giobolqv1/homelander-by-GioBolqv1-/refs/heads/main/homelander.lua"))()
+end)
+if success then
+WindUI:Notify({Title = "祖国人", Content = "已加载", Duration = 2, Icon = "check"})
+else
+WindUI:Notify({Title = "加载失败", Content = tostring(err), Duration = 3, Icon = "alert"})
+end
+end,
+})
+superTab:Button({
+Title = "无敌少侠",
+Desc = "点击加载无敌少侠脚本",
+Callback = function()
+local success, err = pcall(function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/giobolqv1/invincible-characters-animations-by-GioBolqv1-/refs/heads/main/universal.lua"))()
+end)
+if success then
+WindUI:Notify({Title = "无敌少侠", Content = "已加载", Duration = 2, Icon = "check"})
+else
+WindUI:Notify({Title = "加载失败", Content = tostring(err), Duration = 3, Icon = "alert"})
+end
+end,
+})
+superTab:Button({
+Title = "火车头",
+Desc = "点击加载火车头脚本",
+Callback = function()
+local success, err = pcall(function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/giobolqv1/A-Train-by-GioBolqv1-/refs/heads/main/train.lua"))()
+end)
+if success then
+WindUI:Notify({Title = "火车头", Content = "已加载", Duration = 2, Icon = "check"})
+else
+WindUI:Notify({Title = "加载失败", Content = tostring(err), Duration = 3, Icon = "alert"})
+end
+end,
+})
+
+local blackholeTab = Window:Tab({Title = "黑洞", Icon = "circle"})
+
+local bhConfig = {radius = 50, height = 100, speed = 10, strength = 1000}
+local bhRunning = false
+local bhApi = nil
+local function toggleBlackhole(val)
+bhRunning = val
+if val then
+if not bhApi then
+local success, err = pcall(function()
+loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/5.txt"))()
+end)
+if success then
+bhApi = getgenv().RingControl
+end
+end
+if bhApi then
+bhApi:setRadius(bhConfig.radius)
+bhApi:setHeight(bhConfig.height)
+bhApi:setSpeed(bhConfig.speed)
+bhApi:setStrength(bhConfig.strength)
+bhApi:start()
+WindUI:Notify({Title = "黑洞1", Content = "已开启", Duration = 2, Icon = "check"})
+end
+else
+if bhApi then bhApi:stop() end
+WindUI:Notify({Title = "黑洞1", Content = "已关闭", Duration = 2, Icon = "x"})
+end
+end
+local section = blackholeTab:Section({
+Title = "黑洞1",
+Box = true,
+})
+section:Toggle({
+Title = "开关",
+Value = false,
+Callback = function(val) toggleBlackhole(val) end,
+})
+
+local bh2Config = {radius = 50, height = 100, speed = 10, strength = 1000}
+local bh2Running = false
+local bh2Api = nil
+local function toggleBH2(val)
+bh2Running = val
+if val then
+if not bh2Api then
+local success, err = pcall(function()
+loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/9.txt"))()
+end)
+if success then
+bh2Api = getgenv().RingControl2
+end
+end
+if bh2Api then
+bh2Api:setRadius(bh2Config.radius)
+bh2Api:setHeight(bh2Config.height)
+bh2Api:setSpeed(bh2Config.speed)
+bh2Api:setStrength(bh2Config.strength)
+bh2Api:start()
+WindUI:Notify({Title = "黑洞2", Content = "已开启", Duration = 2, Icon = "check"})
+end
+else
+if bh2Api then bh2Api:stop() end
+WindUI:Notify({Title = "黑洞2", Content = "已关闭", Duration = 2, Icon = "x"})
+end
+end
+local bh2Section = blackholeTab:Section({
+Title = "黑洞2",
+Box = true,
+})
+bh2Section:Toggle({
+Title = "开关",
+Value = false,
+Callback = function(val) toggleBH2(val) end,
+})
+
+local playerTab = Window:Tab({Title = "玩家", Icon = "users"})
+
+local playerApi = nil
+local selectedPlayerName = nil
+
+local function loadPlayerApi()
+    if not playerApi then
+        loadstring(game:HttpGet("https://hygg3795-debug.github.io/111/11.txt"))()
+        playerApi = getgenv().PlayerControl
+    end
+    return playerApi
+end
+
+local selectedLabel = playerTab:Paragraph({
+    Title = "当前选中",
+    Desc = "未选择",
+})
+
+local dropdown = playerTab:Dropdown({
+    Title = "选择玩家",
+    Values = {},
+    Callback = function(val)
+        local api = loadPlayerApi()
+        if api then
+            local success, msg = api:selectPlayer(val)
+            if success then
+                selectedPlayerName = val
+                selectedLabel:SetDesc("✅ " .. val)
+                WindUI:Notify({Title = "选择成功", Content = "已选择 " .. val, Duration = 2, Icon = "check"})
+            else
+                WindUI:Notify({Title = "选择失败", Content = msg, Duration = 2, Icon = "alert"})
+            end
+        end
+    end,
+})
+dropdown.Size = UDim2.new(1, -48, 0, 36)
+dropdown.Position = UDim2.new(0, 0, 0, 0)
+
+local refreshBtn = Instance.new("TextButton")
+refreshBtn.Size = UDim2.new(0, 36, 0, 36)
+refreshBtn.Position = UDim2.new(1, -42, 0, 0)
+refreshBtn.Text = "↻"
+refreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+refreshBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+refreshBtn.Font = Enum.Font.GothamBold
+refreshBtn.TextSize = 22
+refreshBtn.Parent = playerTab
+local rc = Instance.new("UICorner")
+rc.CornerRadius = UDim.new(0, 8)
+rc.Parent = refreshBtn
+
+refreshBtn.MouseButton1Click:Connect(function()
+    local api = loadPlayerApi()
+    if api then
+        local list = api:getPlayerList()
+        dropdown:Refresh(list)
+        if #list == 0 then
+            WindUI:Notify({Title = "提示", Content = "没有其他玩家在服务器里", Duration = 2, Icon = "info"})
+        end
+    end
+end)
+
+playerTab:Button({
+    Title = "传送到选中玩家",
+    Callback = function()
+        if not selectedPlayerName then
+            WindUI:Notify({Title = "错误", Content = "请先选择一个玩家", Duration = 2, Icon = "alert"})
+            return
+        end
+        local api = loadPlayerApi()
+        if api then
+            local success, msg = api:teleportTo()
+            WindUI:Notify({Title = success and "传送成功" or "传送失败", Content = msg, Duration = 2, Icon = success and "check" or "alert"})
+        end
+    end,
+})
+
+_G._LCF_WindUI = WindUI
+_G._LCF_TmplWin = Window
+print("[" .. BRAND.name .. "] UI 加载完成 ✅")

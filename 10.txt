@@ -1,0 +1,41 @@
+local function hover()
+    local plr = game.Players.LocalPlayer
+    local enabled = false
+    local con = nil
+    local charCon = nil
+    local z = Vector3.zero
+
+    local function bind(c)
+        local r = c:WaitForChild("HumanoidRootPart")
+        if r then
+            if con then con:Disconnect() con = nil end
+            con = game:GetService("RunService").Heartbeat:Connect(function()
+                if not r.Parent then
+                    con:Disconnect()
+                    con = nil
+                    return
+                end
+                local v = r.AssemblyLinearVelocity
+                r.AssemblyLinearVelocity = Vector3.new(v.X, 0, v.Z)
+            end)
+        end
+    end
+
+    local function start()
+        if charCon then charCon:Disconnect() end
+        bind(plr.Character)
+        charCon = plr.CharacterAdded:Connect(bind)
+        enabled = true
+    end
+
+    local function stop()
+        enabled = false
+        if con then con:Disconnect() con = nil end
+        if charCon then charCon:Disconnect() charCon = nil end
+    end
+
+    return {start = start, stop = stop}
+end
+
+local api = hover()
+if api then getgenv().HoverAPI = api end

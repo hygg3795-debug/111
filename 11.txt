@@ -1,30 +1,32 @@
 local function playerControl()
     local plr = game.Players.LocalPlayer
     local selectedPlayer = nil
-
+    local selectedName = nil
     local function getPlayerList()
         local list = {}
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= plr then
-                table.insert(list, p.Name)
+                local displayName = p.DisplayName or p.Name
+                table.insert(list, p.Name .. " (" .. displayName .. ")")
             end
         end
         return list
     end
-
-    local function selectPlayer(name)
-        local target = game.Players:FindFirstChild(name)
-        if target then
-            selectedPlayer = target
-            return true, "已选择 " .. target.Name
+    local function selectPlayer(displayText)
+        local name = displayText:match("^(.-) %(")
+        if name then
+            local target = game.Players:FindFirstChild(name)
+            if target then
+                selectedPlayer = target
+                selectedName = name
+                return true, "已选择 " .. name
+            end
         end
         return false, "玩家不存在"
     end
-
     local function getSelected()
-        return selectedPlayer
+        return selectedPlayer, selectedName
     end
-
     local function teleportTo(target)
         target = target or selectedPlayer
         if not target then return false, "未选择玩家" end
@@ -37,7 +39,6 @@ local function playerControl()
         myRoot.CFrame = root.CFrame + Vector3.new(0, 2, 0)
         return true, "已传送到 " .. target.Name
     end
-
     return {
         getPlayerList = getPlayerList,
         selectPlayer = selectPlayer,
@@ -45,6 +46,5 @@ local function playerControl()
         teleportTo = teleportTo,
     }
 end
-
 local api = playerControl()
 if api then getgenv().PlayerControl = api end
